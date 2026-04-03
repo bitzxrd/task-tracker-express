@@ -16,14 +16,15 @@
   "main": "src",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "nodemon src/index.ts",
-    "start": "ts-node src/index"
+    "dev": "dotenv -- nodemon src/index.ts",
+    "start": " dotenv -- ts-node src/index"
   },
   "dependencies": {
     "express": "^5.2.1"
   },
   "devDependencies": {
     "@types/express": "^5.0.6",
+    "dotenv-cli": "^11.0.0",
     "nodemon": "^3.1.14",
     "prettier": "^3.8.1",
     "ts-node": "^10.9.2",
