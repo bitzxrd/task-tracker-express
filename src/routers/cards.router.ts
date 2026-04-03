@@ -1,40 +1,80 @@
 import express, { Request, Response } from 'express';
 import { TGetCardsResponse, TCard, TCreateCardRequest } from '../types/cards';
 import { TIdParams } from '../types/common';
+import {
+  createCard,
+  deleteCard,
+  getManyCards,
+  getOneCard,
+  updateCard,
+} from '../database/cards-repository';
+import { randomUUID } from 'crypto';
 
 export const cardsRouter = express.Router();
 
 cardsRouter.get(
   '/',
-  (request: Request<{}, {}>, response: Response<TGetCardsResponse>) => {
-    // TODO: Return cards
+  async (request: Request<{}, {}>, response: Response<TGetCardsResponse>) => {
+    const cards = await getManyCards();
+    response.json(cards);
   },
 );
 
 cardsRouter.get(
   '/:id',
-  (request: Request<TIdParams, {}>, response: Response<TCard>) => {
-    // TODO: Return card by id
+  async (
+    request: Request<TIdParams, {}>,
+    response: Response<TCard | string>,
+  ) => {
+    const card = await getOneCard(request.params.id);
+
+    if (!card) {
+      response.status(404).send('Card not found');
+      return;
+    } else {
+      response.json(card);
+    }
   },
 );
 
 cardsRouter.post(
   '/',
-  (request: Request<{}, {}, TCreateCardRequest>, response: Response<TCard>) => {
-    // TODO: Create a new card
+  async (
+    request: Request<{}, TCard, TCreateCardRequest>,
+    response: Response<TCard>,
+  ) => {
+    const card: TCard = {
+      id: randomUUID(),
+      text: request.body.text,
+    };
+
+    await createCard(card);
+
+    response.send(card);
   },
 );
 
 cardsRouter.put(
   '/:id',
-  (request: Request<TIdParams, {}, TCard>, response: Response<TCard>) => {
-    // TODO: Update a card
+  async (
+    request: Request<TIdParams, TCard, TCreateCardRequest>,
+    response: Response<TCard>,
+  ) => {
+    const card = {
+      id: request.params.id,
+      text: request.body.text,
+    };
+
+    await updateCard(card);
+
+    response.send(card);
   },
 );
 
 cardsRouter.delete(
   '/:id',
-  (request: Request<TIdParams>, response: Response<void>) => {
-    // TODO: Delete a card
+  async (request: Request<TIdParams>, response: Response<void>) => {
+    await deleteCard(request.params.id);
+    response.sendStatus(204);
   },
 );
