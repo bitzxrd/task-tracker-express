@@ -1,15 +1,26 @@
 import express from 'express';
-import { PORT } from './config';
-import { cardsRouter } from './routers/cards.router';
+import { ADMIN_LOGIN, ADMIN_PASSWORD, PORT } from './config';
 import { createTables } from './database/create-tables';
+import basicAuth from 'express-basic-auth';
+import { logger } from './logger';
+import { boardsRouter, cardsRouter } from './routers';
 
 async function run() {
-
   await createTables();
 
   const server = express();
+
+  server.use(
+    basicAuth({
+      users: { [ADMIN_LOGIN]: ADMIN_PASSWORD },
+      challenge: true,
+    }),
+  );
   server.use(express.json());
 
+  server.use(logger)
+
+  server.use('/boards', boardsRouter)
   server.use('/cards', cardsRouter);
 
   server.listen(PORT, () => {
