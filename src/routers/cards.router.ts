@@ -1,6 +1,6 @@
 import express, { Request, Response } from 'express';
-import { TGetCardsResponse, TCard, TCreateCardRequest } from '../types/cards';
-import { TIdParams } from '../types/common';
+import { TGetCardsResponse, TCard, TCreateCardRequest, TUpdateCardRequest } from '../types/cards';
+import { TCardIdParams, TColumnIdParams } from '../types/common';
 import {
   createCard,
   deleteCard,
@@ -10,24 +10,29 @@ import {
 } from '../database/cards-repository';
 import { randomUUID } from 'crypto';
 import { validateCardInput } from '../validation';
+import { checkCardExistsence, checkColumnExistsence } from './middleware';
+import { getOneColumn } from '../database/columns-repository';
 
-export const cardsRouter = express.Router();
+export const cardsRouter = express.Router({ mergeParams: true });
 
 cardsRouter.get(
   '/',
-  async (request: Request<{}, {}>, response: Response<TGetCardsResponse>) => {
-    const cards = await getManyCards();
+  async (
+    request: Request<TColumnIdParams, {}>,
+    response: Response<TGetCardsResponse>,
+  ) => {
+    const cards = await getManyCards(request.params);
     response.json(cards);
   },
 );
 
 cardsRouter.get(
-  '/:id',
+  '/:cardId',
   async (
-    request: Request<TIdParams, {}>,
+    request: Request<TCardIdParams, {}>,
     response: Response<TCard | string>,
   ) => {
-    const card = await getOneCard(request.params.id);
+    const card = await getOneCard(request.params);
 
     if (!card) {
       response.status(404).send('Card not found');
@@ -40,14 +45,16 @@ cardsRouter.get(
 
 cardsRouter.post(
   '/',
+  checkColumnExistsence,
   validateCardInput,
   async (
-    request: Request<{}, TCard, TCreateCardRequest>,
+    request: Request<TColumnIdParams, TCard, TCreateCardRequest>,
     response: Response<TCard>,
   ) => {
     const card: TCard = {
       id: randomUUID(),
       text: request.body.text,
+      columnId: request.params.columnId,
     };
 
     await createCard(card);
@@ -57,15 +64,26 @@ cardsRouter.post(
 );
 
 cardsRouter.put(
-  '/:id',
+  '/:cardId',
   validateCardInput,
+  checkCardExistsence,
   async (
-    request: Request<TIdParams, TCard, TCreateCardRequest>,
-    response: Response<TCard>,
+    request: Request<TCardIdParams, TCard, TUpdateCardRequest>,
+    response: Response<TCard | string>,
   ) => {
-    const card = {
-      id: request.params.id,
+    if (request.params.columnId !== request.body.columnId) {
+      const column = await getOneColumn(request.body.columnId, request.params.boardId);
+
+      if (!column) {
+        response.status(404).send('Column not found');
+        return;
+      }
+    }
+
+    const card: TCard = {
+      id: request.params.cardId,
       text: request.body.text,
+      columnId: request.body.columnId,
     };
 
     await updateCard(card);
@@ -75,9 +93,10 @@ cardsRouter.put(
 );
 
 cardsRouter.delete(
-  '/:id',
-  async (request: Request<TIdParams>, response: Response<void>) => {
-    await deleteCard(request.params.id);
+  '/:cardId',
+  checkCardExistsence,
+  async (request: Request<TCardIdParams>, response: Response<void>) => {
+    await deleteCard(request.params.cardId, request.params.columnId);
     response.sendStatus(204);
   },
 );

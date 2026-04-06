@@ -1,6 +1,6 @@
 import express, { Request, Response } from 'express';
-import { TGetBoardsResponse, TBoard, TCreateBoardRequest } from '../types/boards';
-import { TIdParams } from '../types/common';
+import { TGetBoardsResponse, TBoard, TCreateBoardRequest, TGetBoardResponse } from '../types/boards';
+import { TBoardIdParams } from '../types/common';
 import {
   createBoard,
   deleteBoard,
@@ -22,12 +22,12 @@ boardsRouter.get(
 );
 
 boardsRouter.get(
-  '/:id',
+  '/:boardId',
   async (
-    request: Request<TIdParams, {}>,
-    response: Response<TBoard | string>,
+    request: Request<TBoardIdParams, TGetBoardResponse | string, {}>,
+    response: Response<TGetBoardResponse | string>,
   ) => {
-    const board = await getOneBoard(request.params.id);
+    const board = await getOneBoard(request.params.boardId);
 
     if (!board) {
       response.status(404).send('Board not found');
@@ -57,14 +57,14 @@ boardsRouter.post(
 );
 
 boardsRouter.put(
-  '/:id',
+  '/:boardId',
   validateBoardInput,
   async (
-    request: Request<TIdParams, TBoard, TCreateBoardRequest>,
+    request: Request<TBoardIdParams, TBoard, TCreateBoardRequest>,
     response: Response<TBoard>,
   ) => {
     const board = {
-      id: request.params.id,
+      id: request.params.boardId,
       name: request.body.name,
     };
 
@@ -75,9 +75,9 @@ boardsRouter.put(
 );
 
 boardsRouter.delete(
-  '/:id',
-  async (request: Request<TIdParams>, response: Response<void>) => {
-    await deleteBoard(request.params.id);
+  '/:boardId',
+  async (request: Request<TBoardIdParams>, response: Response<void>) => {
+    await deleteBoard(request.params.boardId);
     response.sendStatus(204);
   },
 );

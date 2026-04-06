@@ -1,9 +1,9 @@
 import { Request, Response } from 'express';
 import { TCard, TCreateCardRequest } from '../types/cards';
-import { TIdParams } from '../types/common';
+import { TCardIdParams } from '../types/common';
 
 export const validateCardInput = (
-  { body }: Request<TIdParams, TCard, TCreateCardRequest>,
+  { body }: Request<TCardIdParams, TCard, TCreateCardRequest>,
   response: Response,
   next: () => void,
 ): void => {

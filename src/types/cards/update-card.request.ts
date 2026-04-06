@@ -1,5 +1,4 @@
-export type TCard = {
-  id: string;
+export type TUpdateCardRequest = {
   text: string;
   columnId: string;
 }

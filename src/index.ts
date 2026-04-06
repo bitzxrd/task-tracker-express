@@ -3,7 +3,7 @@ import { ADMIN_LOGIN, ADMIN_PASSWORD, PORT } from './config';
 import { createTables } from './database/create-tables';
 import basicAuth from 'express-basic-auth';
 import { logger } from './logger';
-import { boardsRouter, cardsRouter } from './routers';
+import { boardsRouter, columnsRouter, cardsRouter } from './routers';
 
 async function run() {
   await createTables();
@@ -21,7 +21,8 @@ async function run() {
   server.use(logger)
 
   server.use('/boards', boardsRouter)
-  server.use('/cards', cardsRouter);
+  server.use('/boards/:boardId/columns', columnsRouter)
+  server.use('/boards/:boardId/columns/:columnId/cards', cardsRouter);
 
   server.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);

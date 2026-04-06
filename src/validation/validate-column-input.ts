@@ -1,9 +1,9 @@
 import { Request, Response } from 'express';
-import { TBoard, TCreateBoardRequest } from '../types/boards';
+import { TColumn, TCreateColumnRequest } from '../types/columns';
 import { TBoardIdParams } from '../types/common';
 
-export const validateBoardInput = (
-  { body }: Request<TBoardIdParams, TBoard, TCreateBoardRequest>,
+export const validateColumnInput = (
+  { body }: Request<TBoardIdParams, TColumn, TCreateColumnRequest>,
   response: Response,
   next: () => void,
 ): void => {
